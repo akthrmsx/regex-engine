@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 
 [workspace]
-members = ["parser"]
+members = ["automaton", "parser"]
 
 [workspace.dependencies]
 anyhow = "1.0.95"
