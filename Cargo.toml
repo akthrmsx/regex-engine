@@ -10,3 +10,4 @@ members = ["automaton", "parser"]
 
 [workspace.dependencies]
 anyhow = "1.0.95"
+parser = { path = "parser" }
