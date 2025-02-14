@@ -121,7 +121,8 @@ impl Assembler for Node {
                 let left = left.assemble(context);
                 let right = right.assemble(context);
                 let start = context.next();
-                let accepts = left.accepts.union(&right.accepts).cloned().collect();
+                let accept = context.next();
+                let accepts = [accept].into();
 
                 let mut automaton = Automaton::new(start, accepts);
                 automaton.add_epsilon_transition(start, left.start);
@@ -129,15 +130,27 @@ impl Assembler for Node {
                 automaton.merge_transitions(&left.transitions);
                 automaton.merge_transitions(&right.transitions);
 
+                for left_accept in left.accepts {
+                    let start = left_accept;
+                    automaton.add_epsilon_transition(start, accept);
+                }
+
+                for right_accept in right.accepts {
+                    let start = right_accept;
+                    automaton.add_epsilon_transition(start, accept);
+                }
+
                 automaton
             }
             Node::Star(node) => {
                 let inner = node.assemble(context);
                 let start = context.next();
-                let accepts = inner.accepts.union(&[start].into()).cloned().collect();
+                let accept = context.next();
+                let accepts = inner.accepts.union(&[accept].into()).cloned().collect();
 
                 let mut automaton = Automaton::new(start, accepts);
                 automaton.add_epsilon_transition(start, inner.start);
+                automaton.add_epsilon_transition(start, accept);
                 automaton.merge_transitions(&inner.transitions);
 
                 for accept in inner.accepts {
@@ -201,11 +214,13 @@ mod tests {
             )),
             Automaton {
                 start: 4,
-                accepts: [1, 3].into(),
+                accepts: [5].into(),
                 transitions: [
                     (4, [(None, [0, 2].into())].into()),
                     (0, [(Some('a'), [1].into())].into()),
                     (2, [(Some('b'), [3].into())].into()),
+                    (1, [(None, [5].into())].into()),
+                    (3, [(None, [5].into())].into()),
                 ]
                 .into(),
             },
@@ -215,9 +230,9 @@ mod tests {
             Automaton::from(Node::Star(Box::new(Node::Char('a')))),
             Automaton {
                 start: 2,
-                accepts: [1, 2].into(),
+                accepts: [1, 3].into(),
                 transitions: [
-                    (2, [(None, [0].into())].into()),
+                    (2, [(None, [0, 3].into())].into()),
                     (0, [(Some('a'), [1].into())].into()),
                     (1, [(None, [0].into())].into()),
                 ]
