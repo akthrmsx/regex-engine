@@ -376,7 +376,7 @@ mod tests {
                 accepts: [3, 4].into(),
                 transitions: [
                     (0, [(Some('a'), [1, 2].into())].into()),
-                    (1, [(Some('b'), [1, 2, 3].into()),].into()),
+                    (1, [(Some('b'), [1, 2, 3].into())].into()),
                     (2, [(Some('a'), [4].into())].into()),
                 ]
                 .into(),
