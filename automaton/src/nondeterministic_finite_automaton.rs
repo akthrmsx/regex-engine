@@ -18,11 +18,13 @@ impl Context {
     }
 }
 
+type Transitions = HashMap<usize, HashMap<Option<char>, HashSet<usize>>>;
+
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Automaton {
     pub(crate) start: usize,
     pub(crate) accepts: HashSet<usize>,
-    pub(crate) transitions: HashMap<usize, HashMap<Option<char>, HashSet<usize>>>,
+    pub(crate) transitions: Transitions,
 }
 
 impl Automaton {
@@ -34,35 +36,121 @@ impl Automaton {
         }
     }
 
-    fn add_transition(&mut self, from: usize, to: usize, c: char) {
+    fn add_transition(&mut self, from: usize, destination: usize, c: char) {
         self.transitions
             .entry(from)
             .or_default()
             .entry(Some(c))
             .or_default()
-            .insert(to);
+            .insert(destination);
     }
 
-    fn add_epsilon_transition(&mut self, from: usize, to: usize) {
+    fn add_epsilon_transition(&mut self, from: usize, destination: usize) {
         self.transitions
             .entry(from)
             .or_default()
             .entry(None)
             .or_default()
-            .insert(to);
+            .insert(destination);
     }
 
-    fn merge_transitions(&mut self, other: &HashMap<usize, HashMap<Option<char>, HashSet<usize>>>) {
+    fn merge_transitions(&mut self, other: &Transitions) {
         for (from, transitions) in other {
-            for (c, tos) in transitions {
+            for (c, destinations) in transitions {
                 self.transitions
                     .entry(*from)
                     .or_default()
                     .entry(*c)
                     .or_default()
-                    .extend(tos);
+                    .extend(destinations);
             }
         }
+    }
+
+    pub(crate) fn remove_epsilon_transitions(&mut self) {
+        if self
+            .accepts
+            .is_subset(&self.calc_epsilon_closure(self.start))
+        {
+            self.accepts.insert(self.start);
+        }
+
+        self.transitions = self.new_transitions_without_epsilon_transitions();
+    }
+
+    fn new_transitions_without_epsilon_transitions(&self) -> Transitions {
+        let mut new_transitions: Transitions = HashMap::new();
+
+        for (from, transitions) in self.transitions.clone() {
+            for (c, _) in transitions {
+                if c.is_none() {
+                    continue;
+                }
+
+                for destination in self.calc_epsilon_closure(from) {
+                    new_transitions
+                        .entry(from)
+                        .or_default()
+                        .entry(c)
+                        .or_default()
+                        .extend(self.expand_epsilon_closure(destination, c));
+                }
+            }
+        }
+
+        new_transitions
+    }
+
+    fn expand_epsilon_closure(&self, from: usize, c: Option<char>) -> HashSet<usize> {
+        let first_destinations = self.calc_epsilon_closure(from);
+        let mut second_destinations = HashSet::new();
+        let mut final_destinations = HashSet::new();
+
+        for destination in first_destinations {
+            second_destinations.extend(self.calc_destinations(destination, c));
+        }
+
+        for destination in second_destinations {
+            final_destinations.extend(self.calc_epsilon_closure(destination));
+        }
+
+        final_destinations
+    }
+
+    fn calc_epsilon_closure(&self, from: usize) -> HashSet<usize> {
+        let mut epsilon_closure = HashSet::new();
+        epsilon_closure.insert(from);
+        let mut modified = true;
+
+        while modified {
+            let mut temp_epsilon_closure: HashSet<usize> = HashSet::new();
+            modified = false;
+
+            for destination in &epsilon_closure {
+                let destinations = self.calc_destinations(*destination, None);
+
+                if destinations.is_empty() || epsilon_closure.is_superset(&destinations) {
+                    continue;
+                }
+
+                temp_epsilon_closure.extend(destinations);
+                modified = true;
+            }
+
+            epsilon_closure.extend(temp_epsilon_closure);
+        }
+
+        epsilon_closure
+    }
+
+    fn calc_destinations(&self, from: usize, c: Option<char>) -> HashSet<usize> {
+        self.transitions
+            .get(&from)
+            .cloned()
+            .unwrap_or_default()
+            .get(&c)
+            .cloned()
+            .unwrap_or_default()
     }
 }
 
@@ -238,6 +326,61 @@ mod tests {
                 ]
                 .into(),
             },
+        );
+    }
+
+    #[test]
+    fn test_remove_epsilon_transition() {
+        let mut automaton = Automaton {
+            start: 0,
+            accepts: [2].into(),
+            transitions: [
+                (0, [(Some('a'), [0].into()), (None, [1].into())].into()),
+                (1, [(Some('b'), [1].into()), (None, [2].into())].into()),
+                (2, [(Some('c'), [2].into())].into()),
+            ]
+            .into(),
+        };
+        automaton.remove_epsilon_transitions();
+
+        assert_eq!(
+            automaton,
+            Automaton {
+                start: 0,
+                accepts: [0, 2].into(),
+                transitions: [
+                    (0, [(Some('a'), [0, 1, 2].into())].into()),
+                    (1, [(Some('b'), [1, 2].into())].into()),
+                    (2, [(Some('c'), [2].into())].into()),
+                ]
+                .into(),
+            }
+        );
+
+        let mut automaton = Automaton {
+            start: 0,
+            accepts: [3, 4].into(),
+            transitions: [
+                (0, [(Some('a'), [1].into())].into()),
+                (1, [(None, [2].into()), (Some('b'), [1, 3].into())].into()),
+                (2, [(Some('a'), [4].into())].into()),
+            ]
+            .into(),
+        };
+        automaton.remove_epsilon_transitions();
+
+        assert_eq!(
+            automaton,
+            Automaton {
+                start: 0,
+                accepts: [3, 4].into(),
+                transitions: [
+                    (0, [(Some('a'), [1, 2].into())].into()),
+                    (1, [(Some('b'), [1, 2, 3].into()),].into()),
+                    (2, [(Some('a'), [4].into())].into()),
+                ]
+                .into(),
+            }
         );
     }
 }
