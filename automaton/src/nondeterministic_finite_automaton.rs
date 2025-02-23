@@ -81,19 +81,25 @@ impl Automaton {
     fn new_transitions_without_epsilon_transitions(&self) -> Transitions {
         let mut new_transitions: Transitions = HashMap::new();
 
-        for (from, transitions) in self.transitions.clone() {
-            for (c, _) in transitions {
-                if c.is_none() {
-                    continue;
-                }
+        for from in self.transitions.keys().cloned() {
+            let chars = self.calc_chars_without_epsilon_transitions(None);
+            let mut chars = Vec::from_iter(chars);
+            chars.sort();
 
+            for c in chars {
                 for destination in self.calc_epsilon_closure(from) {
+                    let destinations = self.expand_epsilon_closure(destination, Some(c));
+
+                    if destinations.is_empty() {
+                        continue;
+                    }
+
                     new_transitions
                         .entry(from)
                         .or_default()
-                        .entry(c)
+                        .entry(Some(c))
                         .or_default()
-                        .extend(self.expand_epsilon_closure(destination, c));
+                        .extend(destinations);
                 }
             }
         }
@@ -123,13 +129,19 @@ impl Automaton {
         let mut modified = true;
 
         while modified {
-            let mut temp_epsilon_closure: HashSet<usize> = HashSet::new();
+            let mut temp_epsilon_closure = HashSet::<usize>::new();
             modified = false;
 
             for destination in &epsilon_closure {
                 let destinations = self.calc_destinations(*destination, None);
 
-                if destinations.is_empty() || epsilon_closure.is_superset(&destinations) {
+                if destinations.is_empty()
+                    || epsilon_closure
+                        .union(&temp_epsilon_closure)
+                        .cloned()
+                        .collect::<HashSet<_>>()
+                        .is_superset(&destinations)
+                {
                     continue;
                 }
 
@@ -143,7 +155,7 @@ impl Automaton {
         epsilon_closure
     }
 
-    fn calc_destinations(&self, from: usize, c: Option<char>) -> HashSet<usize> {
+    pub(crate) fn calc_destinations(&self, from: usize, c: Option<char>) -> HashSet<usize> {
         self.transitions
             .get(&from)
             .cloned()
@@ -151,6 +163,22 @@ impl Automaton {
             .get(&c)
             .cloned()
             .unwrap_or_default()
+    }
+
+    pub(crate) fn calc_chars_without_epsilon_transitions(
+        &self,
+        destinations: Option<&HashSet<usize>>,
+    ) -> HashSet<char> {
+        self.transitions
+            .iter()
+            .filter(|(from, _)| {
+                destinations
+                    .map(|destinations| destinations.contains(from))
+                    .unwrap_or(true)
+            })
+            .flat_map(|(_, transitions)| transitions.keys().flatten())
+            .cloned()
+            .collect()
     }
 }
 
@@ -349,12 +377,23 @@ mod tests {
                 start: 0,
                 accepts: [0, 2].into(),
                 transitions: [
-                    (0, [(Some('a'), [0, 1, 2].into())].into()),
-                    (1, [(Some('b'), [1, 2].into())].into()),
+                    (
+                        0,
+                        [
+                            (Some('a'), [0, 1, 2].into()),
+                            (Some('b'), [1, 2].into()),
+                            (Some('c'), [2].into())
+                        ]
+                        .into()
+                    ),
+                    (
+                        1,
+                        [(Some('b'), [1, 2].into()), (Some('c'), [2].into())].into()
+                    ),
                     (2, [(Some('c'), [2].into())].into()),
                 ]
                 .into(),
-            }
+            },
         );
 
         let mut automaton = Automaton {
@@ -376,11 +415,14 @@ mod tests {
                 accepts: [3, 4].into(),
                 transitions: [
                     (0, [(Some('a'), [1, 2].into())].into()),
-                    (1, [(Some('b'), [1, 2, 3].into())].into()),
+                    (
+                        1,
+                        [(Some('a'), [4].into()), (Some('b'), [1, 2, 3].into())].into()
+                    ),
                     (2, [(Some('a'), [4].into())].into()),
                 ]
                 .into(),
-            }
+            },
         );
     }
 }
