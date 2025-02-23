@@ -16,7 +16,9 @@ fn main() {
     match Regex::new(&args.pattern) {
         Ok(regex) => {
             if regex.matches(&args.text) {
-                println!("{}", &args.text);
+                println!("Matched");
+            } else {
+                eprintln!("Unmatched")
             }
         }
         Err(err) => eprintln!("{}", err),
