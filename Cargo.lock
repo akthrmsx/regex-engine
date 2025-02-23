@@ -172,6 +172,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "regex-engine"
+version = "0.1.0"
+dependencies = [
+ "automaton",
+ "clap",
+]
+
+[[package]]
 name = "strsim"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -186,14 +194,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
-]
-
-[[package]]
-name = "toy-regex"
-version = "0.1.0"
-dependencies = [
- "automaton",
- "clap",
 ]
 
 [[package]]

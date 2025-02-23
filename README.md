@@ -1,6 +1,6 @@
-# toy-regex
+# Regex engine
 
-This is toy regex engine written in Rust.
+This is simple regex engine written in Rust.
 
 ## Engine types
 
@@ -16,10 +16,10 @@ This is toy regex engine written in Rust.
 ## Examples
 
 ```sh
-$ toy-regex -h
+$ regex-engine -h
 Regular expression matcher by DFA
 
-Usage: toy-regex <PATTERN> <TEXT>
+Usage: regex-engine <PATTERN> <TEXT>
 
 Arguments:
   <PATTERN>  Regular expression pattern
@@ -30,19 +30,19 @@ Options:
 ```
 
 ```sh
-$ toy-regex "P(erl|ython|HP)|Ruby" "Perl"
+$ regex-engine "P(erl|ython|HP)|Ruby" "Perl"
 Matched
 
-$ toy-regex "P(erl|ython|HP)|Ruby" "Python"
+$ regex-engine "P(erl|ython|HP)|Ruby" "Python"
 Matched
 
-$ toy-regex "P(erl|ython|HP)|Ruby" "PHP"
+$ regex-engine "P(erl|ython|HP)|Ruby" "PHP"
 Matched
 
-$ toy-regex "P(erl|ython|HP)|Ruby" "Ruby"
+$ regex-engine "P(erl|ython|HP)|Ruby" "Ruby"
 Matched
 
-$ toy-regex "P(erl|ython|HP)|Ruby" "Rust"
+$ regex-engine "P(erl|ython|HP)|Ruby" "Rust"
 Unmatched
 ```
 
