@@ -18,9 +18,8 @@ impl Regex {
         let mut nfa = NFA::from(node);
         nfa.remove_epsilon_transitions();
 
-        let dfa = DFA::from(nfa);
-
-        // TODO: 最小化
+        let mut dfa = DFA::from(nfa);
+        dfa.minimize();
 
         Ok(Self { automaton: dfa })
     }

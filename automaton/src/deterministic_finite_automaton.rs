@@ -53,6 +53,12 @@ pub(crate) struct Automaton {
     pub(crate) transitions: HashMap<(usize, char), usize>,
 }
 
+impl Automaton {
+    pub(crate) fn minimize(&mut self) {
+        // TODO
+    }
+}
+
 impl From<NFA> for Automaton {
     fn from(nfa: NFA) -> Self {
         let mut context = Context::new();
