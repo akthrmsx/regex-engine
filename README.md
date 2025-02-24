@@ -17,16 +17,17 @@ This is simple regex engine written in Rust.
 
 ```sh
 $ regex-engine -h
-Regular expression matcher by DFA
+String matcher by regular expression
 
-Usage: regex-engine <PATTERN> <TEXT>
+Usage: regex-engine [OPTIONS] <PATTERN> <TEXT>
 
 Arguments:
   <PATTERN>  Regular expression pattern
   <TEXT>     Target text
 
 Options:
-  -h, --help  Print help
+  -t, --type <ENGINE_TYPE>  Engine type [default: dfa] [possible values: dfa, vm]
+  -h, --help                Print help (see more with '--help')
 ```
 
 ```sh
