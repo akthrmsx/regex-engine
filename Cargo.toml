@@ -6,9 +6,10 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.5.30", features = ["derive"] }
 automaton = { path = "./automaton" }
+virtual_machine = { path = "./virtual_machine" }
 
 [workspace]
-members = ["automaton", "parser"]
+members = ["automaton", "parser", "virtual_machine"]
 
 [workspace.dependencies]
 anyhow = "1.0.95"

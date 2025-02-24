@@ -2,7 +2,7 @@
 
 This is simple regex engine written in Rust.
 
-## Engine types
+## Supported engine types
 
 * DFA
 * VM (TODO)
