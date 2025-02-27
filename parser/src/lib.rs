@@ -16,6 +16,12 @@ pub enum Node {
     Star(Box<Node>),
 }
 
+impl Node {
+    pub fn is_star(&self) -> bool {
+        matches!(self, Self::Star(_))
+    }
+}
+
 pub fn parse(input: &str) -> Result<Node> {
     match expression(input) {
         Ok((_, node)) => Ok(node),

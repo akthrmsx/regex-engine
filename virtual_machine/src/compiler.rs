@@ -42,12 +42,16 @@ impl CompileHelper for Node {
                 n = n2;
             }
             Node::Star(node) => {
-                let (instructions1, n1) = node.recur(n + 1);
+                if node.is_star() {
+                    return node.recur(n);
+                } else {
+                    let (instructions1, n1) = node.recur(n + 1);
 
-                instructions.push(Instruction::S(n + 1, n1 + 1));
-                instructions.extend(instructions1);
-                instructions.push(Instruction::J(n));
-                n = n1 + 1;
+                    instructions.push(Instruction::S(n + 1, n1 + 1));
+                    instructions.extend(instructions1);
+                    instructions.push(Instruction::J(n));
+                    n = n1 + 1;
+                }
             }
         }
 
@@ -114,6 +118,21 @@ mod tests {
                 Box::new(Node::Char('a')),
                 Box::new(Node::Char('b')),
             )))
+            .compile(),
+            vec![
+                Instruction::S(1, 4),
+                Instruction::C('a'),
+                Instruction::C('b'),
+                Instruction::J(0),
+                Instruction::M,
+            ],
+        );
+
+        assert_eq!(
+            Node::Star(Box::new(Node::Star(Box::new(Node::Concat(
+                Box::new(Node::Char('a')),
+                Box::new(Node::Char('b')),
+            )))))
             .compile(),
             vec![
                 Instruction::S(1, 4),
