@@ -4,8 +4,8 @@ This is simple regex engine written in Rust.
 
 ## Supported engine types
 
-* DFA
-* VM (TODO)
+* Deterministic finite automaton (DFA)
+* Virtual machine (VM)
 
 ## Supported features
 
