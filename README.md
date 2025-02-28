@@ -1,6 +1,6 @@
 # Regex engine
 
-This is simple regex engine written in Rust.
+This is a simple regex engine written in Rust.
 
 ## Supported engine types
 
